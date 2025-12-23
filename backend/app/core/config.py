@@ -26,8 +26,6 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
-    
-    ADMIN_TOKEN: str = "gamehub-super-secret-admin-token"
 
     DEFAULT_PAGE_SIZE: int = 10
     MAX_PAGE_SIZE: int = 100
