@@ -8,7 +8,7 @@ ENV_PATH = ".env"
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", case_sensitive=False, extra="ignore"
+        env_file=ENV_PATH, case_sensitive=False, extra="ignore"
     )
 
     APP_NAME: str = "GameHub API"
@@ -18,7 +18,8 @@ class Settings(BaseSettings):
 
     API_V1_PREFIX: str = "/api/v1"
 
-    DATABASE_URL: str = "postgres://postgres:postgres@localhost:5432/gamehub"
+    SUPABASE_URL: str
+    SUPABASE_KEY: str
 
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

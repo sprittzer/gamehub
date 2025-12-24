@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class ReviewBase(BaseModel):
     rating: int = Field(
         ...,
@@ -14,15 +15,15 @@ class ReviewBase(BaseModel):
     text: str = Field(
         ...,
         min_length=10,
-        description="Текст рецензии (минимум 10 символов)",
-        examples=["The Witcher 3 — это шедевр..."],
+        description="Текст рецензии",
+        examples=["The Witcher 3 — это шедевр!!!"],
     )
 
 
 class ReviewCreate(ReviewBase):
     game_id: int = Field(
         ...,
-        description="ID игры",
+        description="ID игры, на которую пишется рецензия",
         examples=[1],
     )
 
@@ -32,7 +33,7 @@ class ReviewUpdate(BaseModel):
         None,
         ge=1,
         le=10,
-        description="Новая оценка",
+        description="Новая оценка игры",
     )
     text: Optional[str] = Field(
         None,
@@ -40,16 +41,17 @@ class ReviewUpdate(BaseModel):
         description="Новый текст рецензии",
     )
 
+
 class ReviewGame(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int = Field(..., description="ID игры")
     title: str = Field(..., description="Название игры")
 
 
 class ReviewResponse(ReviewBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int = Field(..., description="ID рецензии")
     game_id: int = Field(..., description="ID игры")
     ip_address: str = Field(..., description="IP автора")
@@ -58,7 +60,7 @@ class ReviewResponse(ReviewBase):
 
 class ReviewDetailResponse(ReviewBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int = Field(..., description="ID рецензии")
     game: ReviewGame = Field(..., description="Игра")
     ip_address: str = Field(..., description="IP автора")
@@ -76,11 +78,6 @@ class ReviewListResponse(BaseModel):
 class GameReviewsResponse(BaseModel):
     game_id: int = Field(..., description="ID игры")
     game_title: str = Field(..., description="Название игры")
-    average_rating: float = Field(
-        ...,
-        ge=0,
-        le=10,
-        description="Средний рейтинг игры"
-    )
+    average_rating: float = Field(..., ge=0, le=10, description="Средний рейтинг игры")
     reviews_count: int = Field(..., description="Количество рецензий")
     items: List[ReviewDetailResponse] = Field(..., description="Список рецензий")
