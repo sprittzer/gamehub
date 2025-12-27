@@ -13,6 +13,7 @@ fastapi = "^0.109.2"
 uvicorn = {extras = ["standard"], version = "^0.27.1"}
 tortoise-orm = {extras = ["asyncpg"], version = "^0.20.0"}
 asyncpg = "^0.29.0"
+httpx = "<0.28.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 pydantic = "^2.6.1"
@@ -45,3 +46,9 @@ select = ["E", "W", "F", "I"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning"
+]
+addopts = "-q -s"
