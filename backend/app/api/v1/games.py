@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, Query
 from app.core.database import (
     create_game,
     delete_game,
+    get_all_genres,
+    get_all_platforms,
+    get_game_detail,
     get_games,
+    get_recent_games,
+    get_top_games,
     update_game,
 )
 from app.schemas.game import (

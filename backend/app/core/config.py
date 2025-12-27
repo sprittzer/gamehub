@@ -20,7 +20,6 @@ class Settings(BaseSettings):
 
     SUPABASE_URL: str
     SUPABASE_KEY: str
-
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
