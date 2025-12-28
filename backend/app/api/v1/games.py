@@ -1,6 +1,6 @@
+import uuid
 from typing import List
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from postgrest.exceptions import APIError
 
 from app.core.database import (
@@ -108,6 +108,34 @@ async def create_game_handler(game: GameCreate):
 
     except Exception:
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
+    
+@router.patch("/{game_id}/cover", response_model=dict, status_code=200)
+async def update_game_cover(game_id: int, cover_image: UploadFile = File(...)):
+    game = supabase.table("games").select("id,title").eq("id", game_id).maybe_single().execute()
+    if not game:
+        raise HTTPException(status_code=404, detail="Игра не найдена")
+
+    file_extension = cover_image.filename.split('.')[-1].lower()
+    if file_extension not in ['jpg', 'jpeg', 'png', 'webp']:
+        raise HTTPException(status_code=422, detail="Поддерживаемые форматы: jpg, png, webp")
+    
+    file_path = f"covers/{uuid.uuid4()}.{file_extension}"
+    file_content = await cover_image.read()
+    
+    upload_result = supabase.storage.from_("game-covers").upload(
+        file_path, file_content,
+        {"content-type": cover_image.content_type or "image/jpeg"}
+    )
+    
+    if not upload_result:
+        raise HTTPException(status_code=500, detail="Ошибка загрузки обложки")
+    
+    cover_path = supabase.storage.from_("game-covers").get_public_url(file_path).rstrip('/')
+    
+    supabase.table("games").update({"cover_image_path": cover_path}).eq("id", game_id).execute()
+    
+    return {"cover_image_path": cover_path, "game_id": game_id}
+
 
 
 @router.patch("/{game_id}", response_model=GameResponse)

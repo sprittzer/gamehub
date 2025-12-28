@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-
+from fastapi import Form
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -61,8 +61,55 @@ class GameBase(BaseModel):
     )
 
 
-class GameCreate(GameBase):
-    pass
+class GameCreate(BaseModel):
+    title: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Название игры",
+        examples=["The Witcher 3: Wild Hunt"],
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Описание игры",
+        examples=["Эпическая ролевая игра в открытом мире..."],
+    )
+    genres: List[str] = Field(
+        default_factory=list,
+        description="Список жанров игры",
+        examples=[["RPG", "Action", "Open World"]],
+    )
+    developer: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Разработчик игры",
+        examples=["CD Projekt Red"],
+    )
+    publisher: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Издатель игры",
+        examples=["CD Projekt"],
+    )
+    release_year: int = Field(
+        ...,
+        ge=1900,
+        le=2030,
+        description="Год выхода игры",
+        examples=[2015],
+    )
+    platforms: List[str] = Field(
+        default_factory=list,
+        description="Платформы, на которых доступна игра",
+        examples=[["PC", "PS4", "Xbox One", "Nintendo Switch"]],
+    )
+    average_rating: float = Field(
+        0.0,
+        ge=0,
+        le=10,
+        description="Средний рейтинг",
+        examples=[8.5],
+    )
 
 
 class GameUpdate(BaseModel):

@@ -57,7 +57,7 @@ def test_create_game(client):
 
 
 def test_update_game(client):
-    game_response = client.get("/api/v1/games")
+    game_response = client.get("/api/v1/games?page_size=100")
     games = game_response.json()["items"]
     test_game = next((g for g in games if g["title"] == "Test Game RPG"), None)
     assert test_game is not None, "Test Game RPG должна существовать"
@@ -83,7 +83,7 @@ def test_update_game(client):
 
 
 def test_delete_game(client):
-    game_response = client.get("/api/v1/games")
+    game_response = client.get("/api/v1/games?page_size=100")
     games = game_response.json()["items"]
     test_game = next((g for g in games if "Test Game RPG Updated" in g["title"]), None)
     assert test_game is not None, "Test Game RPG Updated должна существовать"
@@ -117,3 +117,43 @@ def test_genres(client):
 def test_platforms(client):
     response = client.get("/api/v1/games/platforms")
     assert response.status_code == 200
+
+
+def test_upload_cover(client):
+    game_data = {
+        "title": "Game With Cover Test",
+        "release_year": 2024,
+        "genres": ["RPG"],
+        "platforms": ["PC"],
+    }
+    create_response = client.post("/api/v1/games", json=game_data)
+    assert create_response.status_code == 201
+    game_id = create_response.json()["id"]
+
+    with open("tests/test_cover.jpg", "rb") as image_file:
+        response = client.patch(
+            f"/api/v1/games/{game_id}/cover",
+            files={"cover_image": ("test_cover.jpg", image_file, "image/jpeg")}
+        )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert "cover_image_path" in data
+    assert "game_id" in data
+    assert data["game_id"] == game_id
+    assert data["cover_image_path"].startswith("https://")
+
+    with open("tests/test_cover.jpg", "rb") as image_file:
+        response = client.patch(
+            f"/api/v1/games/999/cover",
+            files={"cover_image": ("test_cover.jpg", image_file, "image/jpeg")}
+        )
+    assert response.status_code == 404
+
+    with open("tests/test_cover.jpg", "rb") as image_file:
+        response = client.patch(
+            f"/api/v1/games/{game_id}/cover",
+            files={"cover_image": ("test_cover.txt", image_file, "text/plain")}
+        )
+    assert response.status_code == 422
+    assert "Поддерживаемые форматы" in response.json()["detail"]

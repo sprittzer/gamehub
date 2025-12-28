@@ -14,22 +14,27 @@ router = APIRouter(prefix="/reviews", tags=["Рецензии"])
 
 @router.get("", response_model=ReviewListResponse)
 async def get_all_reviews(
-    page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(10, ge=1, le=100)
 ):
     offset = (page - 1) * page_size
+    
     response = (
         supabase.table("reviews")
-        .select("*")
+        .select("*", count="exact")
         .range(offset, offset + page_size - 1)
         .execute()
     )
-
+    
+    total = response.count or 0
+    pages = (total + page_size - 1) // page_size if page_size > 0 else 1
+    
     return ReviewListResponse(
         items=response.data,
-        total=len(response.data),
+        total=total,
         page=page,
         page_size=page_size,
-        pages=1,
+        pages=pages,
     )
 
 
