@@ -75,27 +75,21 @@ async def delete_game(game_id: int) -> bool:
 async def update_game_average_rating(game_id: int) -> None:
     response = (
         supabase.table("reviews")
-        .select("avg(rating)", count="exact")
+        .select("rating", count="exact")
         .eq("game_id", game_id)
-        .single()
         .execute()
     )
 
-    if response.data and response.data.get("count", 0) > 0:
-        avg_rating = round(float(response.data["avg"]), 1)
-        (
-            supabase.table("games")
-            .update({"average_rating": avg_rating})
-            .eq("id", game_id)
-            .execute()
-        )
+    if response.count and response.count > 0:
+        ratings = [r["rating"] for r in response.data]
+        avg_rating = round(sum(ratings) / len(ratings), 1)
+        supabase.table("games").update({"average_rating": avg_rating}).eq(
+            "id", game_id
+        ).execute()
     else:
-        (
-            supabase.table("games")
-            .update({"average_rating": 0.0})
-            .eq("id", game_id)
-            .execute()
-        )
+        supabase.table("games").update({"average_rating": 0.0}).eq(
+            "id", game_id
+        ).execute()
 
 
 async def get_top_games(limit: int = 10) -> List[Dict]:

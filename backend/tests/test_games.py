@@ -133,9 +133,9 @@ def test_upload_cover(client):
     with open("tests/test_cover.jpg", "rb") as image_file:
         response = client.patch(
             f"/api/v1/games/{game_id}/cover",
-            files={"cover_image": ("test_cover.jpg", image_file, "image/jpeg")}
+            files={"cover_image": ("test_cover.jpg", image_file, "image/jpeg")},
         )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "cover_image_path" in data
@@ -145,15 +145,15 @@ def test_upload_cover(client):
 
     with open("tests/test_cover.jpg", "rb") as image_file:
         response = client.patch(
-            f"/api/v1/games/999/cover",
-            files={"cover_image": ("test_cover.jpg", image_file, "image/jpeg")}
+            "/api/v1/games/999/cover",
+            files={"cover_image": ("test_cover.jpg", image_file, "image/jpeg")},
         )
     assert response.status_code == 404
 
     with open("tests/test_cover.jpg", "rb") as image_file:
         response = client.patch(
             f"/api/v1/games/{game_id}/cover",
-            files={"cover_image": ("test_cover.txt", image_file, "text/plain")}
+            files={"cover_image": ("test_cover.txt", image_file, "text/plain")},
         )
     assert response.status_code == 422
     assert "Поддерживаемые форматы" in response.json()["detail"]

@@ -14,21 +14,20 @@ router = APIRouter(prefix="/reviews", tags=["Рецензии"])
 
 @router.get("", response_model=ReviewListResponse)
 async def get_all_reviews(
-    page: int = Query(1, ge=1), 
-    page_size: int = Query(10, ge=1, le=100)
+    page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)
 ):
     offset = (page - 1) * page_size
-    
+
     response = (
         supabase.table("reviews")
         .select("*", count="exact")
         .range(offset, offset + page_size - 1)
         .execute()
     )
-    
+
     total = response.count or 0
     pages = (total + page_size - 1) // page_size if page_size > 0 else 1
-    
+
     return ReviewListResponse(
         items=response.data,
         total=total,
@@ -42,7 +41,7 @@ async def get_all_reviews(
 async def get_recent_reviews(limit: int = Query(10, ge=1, le=50)):
     response = (
         supabase.table("reviews")
-        .select("*, game(*)")
+        .select("*, games(*)")
         .order("created_at", desc=True)
         .limit(limit)
         .execute()
@@ -54,12 +53,12 @@ async def get_recent_reviews(limit: int = Query(10, ge=1, le=50)):
 async def get_review(review_id: int):
     response = (
         supabase.table("reviews")
-        .select("*, game(*)")
+        .select("*, games(*)")
         .eq("id", review_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not response.data:
+    if not response:
         raise HTTPException(status_code=404, detail="Рецензия не найдена")
     return response.data
 
@@ -93,13 +92,14 @@ async def create_review(review: ReviewCreate, request: Request):
 
 @router.patch("/{review_id}", response_model=dict)
 async def update_review(review_id: int, update_data: ReviewUpdate, request: Request):
-    review = (
-        supabase.table("reviews").select("*").eq("id", review_id).single().execute()
-    )
-    if not review.data:
+    review_check = supabase.table("reviews").select("*").eq("id", review_id).execute()
+    if not review_check.data:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+    review = review_check.data[0]
+    if not review:
         raise HTTPException(status_code=404, detail="Рецензия не найдена")
 
-    review_data = review.data
+    review_data = review
     if review_data["ip_address"] != request.client.host:
         raise HTTPException(403, "Нет доступа")
 
@@ -115,35 +115,38 @@ async def update_review(review_id: int, update_data: ReviewUpdate, request: Requ
 
 @router.delete("/{review_id}", status_code=204)
 async def delete_review(review_id: int, request: Request):
-    review = (
-        supabase.table("reviews").select("*").eq("id", review_id).single().execute()
-    )
-    if not review.data:
+    review_check = supabase.table("reviews").select("*").eq("id", review_id).execute()
+    if not review_check.data:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+    review = review_check.data[0]
+    if not review:
         raise HTTPException(status_code=404, detail="Рецензия не найдена")
 
-    if review.data["ip_address"] != request.client.host:
+    if review["ip_address"] != request.client.host:
         raise HTTPException(403, "Нет доступа")
 
     supabase.table("reviews").delete().eq("id", review_id).execute()
-    await update_game_average_rating(review.data["game_id"])
+    await update_game_average_rating(review["game_id"])
 
     return None
 
 
 @router.get("/game/{game_id}", response_model=dict)
 async def get_game_reviews(game_id: int):
-    game = supabase.table("games").select("*").eq("id", game_id).single().execute()
-    if not game.data:
+    game_check = supabase.table("games").select("*").eq("id", game_id).execute()
+    if not game_check.data:
         raise HTTPException(status_code=404, detail="Игра не найдена")
 
+    game = game_check.data[0]
+
     reviews = (
-        supabase.table("reviews").select("*, game(*)").eq("game_id", game_id).execute()
+        supabase.table("reviews").select("*, games(*)").eq("game_id", game_id).execute()
     )
 
     return {
         "game_id": game_id,
-        "game_title": game.data["title"],
-        "average_rating": game.data["average_rating"],
+        "game_title": game["title"],
+        "average_rating": game["average_rating"] or 0,
         "reviews_count": len(reviews.data),
         "items": reviews.data,
     }
