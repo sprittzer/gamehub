@@ -157,6 +157,6 @@ def test_upload_cover(client):
         )
     assert response.status_code == 422
     assert "Поддерживаемые форматы" in response.json()["detail"]
-    
+
     client.delete(f"/api/v1/games/{game_id}")
     assert client.delete(f"/api/v1/games/{game_id}").status_code == 404
