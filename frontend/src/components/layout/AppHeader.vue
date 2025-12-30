@@ -25,34 +25,28 @@
 
     <!-- RIGHT: ADMIN -->
     <div class="menubar-right">
-      <Button
-        label="Админ"
-        severity="info"
-        size="small"
-        class="admin-btn"
-        @click="onAdmin"
-      />
+      <Button label="Админ" severity="info" size="small" class="admin-btn" @click="onAdmin" />
     </div>
   </header>
 </template>
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
-import Button from 'primevue/button'
+import { useRoute, useRouter } from 'vue-router';
+import Button from 'primevue/button';
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 const items = [
   { label: 'Игры', icon: 'pi pi-list', to: '/games' },
-  { label: 'Отзывы', icon: 'pi pi-comments', to: '/reviews' }
-]
+  { label: 'Отзывы', icon: 'pi pi-comments', to: '/reviews' },
+];
 
-const isActive = (path) => route.path.startsWith(path)
+const isActive = (path) => route.path.startsWith(path);
 
 const onAdmin = () => {
-  router.push('/admin')
-}
+  router.push('/admin');
+};
 </script>
 
 <style scoped>

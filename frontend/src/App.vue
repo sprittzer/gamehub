@@ -1,12 +1,12 @@
 <!-- src/App.vue -->
 <template>
-  <Layout>
+  <AppLayout>
     <router-view />
-  </Layout>
-  <Toast position="top-right" />
+  </AppLayout>
+  <AppToast position="top-right" />
 </template>
 
 <script setup>
-import Layout from '@/components/layout/Layout.vue'
-import { RouterView } from 'vue-router'
+import AppLayout from '@/components/layout/AppLayout.vue';
+import { RouterView } from 'vue-router';
 </script>

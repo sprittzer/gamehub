@@ -11,8 +11,14 @@
         <div v-for="review in reviews" :key="review.id" class="review-card">
           <!-- Игра -->
           <div class="game-info" @click="goToGame(review.game_id)">
-            <img :src="review.game?.cover_image_path || placeholderImage" alt="Game Image" class="game-image" />
-            <span class="game-title" :title="review.game?.title">{{ review.game?.title || 'Игра не найдена' }}</span>
+            <img
+              :src="review.game?.cover_image_path || placeholderImage"
+              alt="Game Image"
+              class="game-image"
+            />
+            <span class="game-title" :title="review.game?.title">{{
+              review.game?.title || 'Игра не найдена'
+            }}</span>
           </div>
 
           <!-- Отзыв -->
@@ -27,66 +33,64 @@
       </div>
 
       <div v-else class="empty-state">
-        <Message severity="info" :closable="false">
-          У вас пока нет отзывов
-        </Message>
+        <Message severity="info" :closable="false"> У вас пока нет отзывов </Message>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
-import { api } from '@/api'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import Message from 'primevue/message';
+import ProgressSpinner from 'primevue/progressspinner';
+import { api } from '@/api';
 
-const router = useRouter()
-const reviews = ref([])
-const loading = ref(false)
-const placeholderImage = '/images/game-placeholder.png'
+const router = useRouter();
+const reviews = ref([]);
+const loading = ref(false);
+const placeholderImage = '/images/game-placeholder.png';
 
 const loadReviews = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await fetch(api.reviews.myReviews())
-    if (!res.ok) throw new Error('Ошибка загрузки')
-    const data = await res.json()
-    const items = data.items || []
+    const res = await fetch(api.reviews.myReviews());
+    if (!res.ok) throw new Error('Ошибка загрузки');
+    const data = await res.json();
+    const items = data.items || [];
 
     // Подгружаем игры
     const reviewsWithGames = await Promise.all(
       items.map(async (r) => {
         try {
-          const gameRes = await fetch(api.games.get(r.game_id))
-          r.game = gameRes.ok ? await gameRes.json() : null
+          const gameRes = await fetch(api.games.get(r.game_id));
+          r.game = gameRes.ok ? await gameRes.json() : null;
         } catch {
-          r.game = null
+          r.game = null;
         }
-        return r
-      })
-    )
-    reviews.value = reviewsWithGames
+        return r;
+      }),
+    );
+    reviews.value = reviewsWithGames;
   } catch (err) {
-    console.error(err)
-    reviews.value = []
+    console.error(err);
+    reviews.value = [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const goToGame = (gameId) => {
-  if (gameId) router.push(`/games/${gameId}`)
-}
+  if (gameId) router.push(`/games/${gameId}`);
+};
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString()
-}
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString();
+};
 
-onMounted(loadReviews)
+onMounted(loadReviews);
 </script>
 
 <style scoped>
@@ -109,7 +113,7 @@ onMounted(loadReviews)
 .review-card {
   display: flex;
   gap: 1rem;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -139,7 +143,7 @@ onMounted(loadReviews)
   font-weight: 600;
   color: #4f46e5;
   text-align: center;
-  max-width: 100px;       /* ограничение по ширине картинки */
+  max-width: 100px; /* ограничение по ширине картинки */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis; /* многоточие если длинное название */

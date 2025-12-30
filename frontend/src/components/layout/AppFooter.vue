@@ -1,7 +1,6 @@
 <template>
   <footer class="footer">
     <div class="footer-inner">
-
       <!-- LEFT: BRAND -->
       <div class="footer-brand">
         <RouterLink to="/" class="brand">
@@ -10,8 +9,7 @@
         </RouterLink>
 
         <p class="brand-description">
-          Каталог видеоигр с отзывами игроков.
-          Открывайте новые игры и делитесь впечатлениями.
+          Каталог видеоигр с отзывами игроков. Открывайте новые игры и делитесь впечатлениями.
         </p>
       </div>
 
@@ -32,22 +30,17 @@
 
       <!-- RIGHT: META -->
       <div class="footer-meta">
-        <p class="copyright">
-          © {{ year }} GameHub
-        </p>
-        <p class="tech">
-          Учебный проект · Vue 3 + PrimeVue
-        </p>
+        <p class="copyright">© {{ year }} GameHub</p>
+        <p class="tech">Учебный проект · Vue 3 + PrimeVue</p>
       </div>
-
     </div>
   </footer>
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+import { RouterLink } from 'vue-router';
 
-const year = new Date().getFullYear()
+const year = new Date().getFullYear();
 </script>
 
 <style scoped>

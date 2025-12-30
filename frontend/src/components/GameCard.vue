@@ -2,11 +2,7 @@
   <Card class="game-card" @click="onCardClick">
     <template #header>
       <div class="media">
-        <img
-          v-if="coverImage"
-          :src="coverImage"
-          :alt="game.title"
-        />
+        <img v-if="coverImage" :src="coverImage" :alt="game.title" />
         <div v-else class="placeholder">
           <i class="pi pi-image"></i>
         </div>
@@ -29,18 +25,11 @@
           </div>
 
           <div v-if="game.genres?.length" class="genres">
-            <span
-              v-for="genre in displayedGenres"
-              :key="genre"
-              class="genre"
-              :title="genre"
-            >
+            <span v-for="genre in displayedGenres" :key="genre" class="genre" :title="genre">
               {{ genre }}
             </span>
 
-            <span v-if="remainingGenres > 0" class="more">
-              +{{ remainingGenres }}
-            </span>
+            <span v-if="remainingGenres > 0" class="more"> +{{ remainingGenres }} </span>
           </div>
         </div>
       </div>
@@ -49,34 +38,28 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import Card from 'primevue/card'
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import Card from 'primevue/card';
 
 const props = defineProps({
   game: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const router = useRouter()
+const router = useRouter();
 
-const coverImage = computed(() =>
-  props.game.cover_image_path || props.game.cover_image || null
-)
+const coverImage = computed(() => props.game.cover_image_path || props.game.cover_image || null);
 
-const displayedGenres = computed(() =>
-  props.game.genres?.slice(0, 2) || []
-)
+const displayedGenres = computed(() => props.game.genres?.slice(0, 2) || []);
 
-const remainingGenres = computed(() =>
-  Math.max(0, (props.game.genres?.length || 0) - 2)
-)
+const remainingGenres = computed(() => Math.max(0, (props.game.genres?.length || 0) - 2));
 
 const onCardClick = () => {
-  router.push(`/games/${props.game.id}`)
-}
+  router.push(`/games/${props.game.id}`);
+};
 </script>
 
 <style scoped>
@@ -113,7 +96,9 @@ const onCardClick = () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: filter 0.25s ease, transform 0.25s ease;
+  transition:
+    filter 0.25s ease,
+    transform 0.25s ease;
 }
 
 .placeholder {
@@ -134,12 +119,7 @@ const onCardClick = () => {
   flex-direction: column;
   justify-content: flex-end;
   gap: 0.5rem;
-  background: linear-gradient(
-    to top,
-    rgba(2, 6, 23, 0.85),
-    rgba(2, 6, 23, 0.4),
-    transparent
-  );
+  background: linear-gradient(to top, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.4), transparent);
   opacity: 0;
   transition: opacity 0.25s ease;
 }

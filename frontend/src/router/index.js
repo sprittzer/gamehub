@@ -1,19 +1,19 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
-  { path: '/', component: () => import('@/views/Games.vue') },
-  { path: '/games', component: () => import('@/views/Games.vue') },
+  { path: '/', component: () => import('@/views/GamesPage.vue') },
+  { path: '/games', component: () => import('@/views/GamesPage.vue') },
   { path: '/games/:id', component: () => import('@/views/GameDetail.vue'), name: 'game-detail' },
-  { path: '/reviews', component: () => import('@/views/Reviews.vue') },
-  { path: '/admin', component: () => import('@/views/Admin.vue') }
-]
+  { path: '/reviews', component: () => import('@/views/ReviewsPage.vue') },
+  { path: '/admin', component: () => import('@/views/AdminPage.vue') },
+];
 
 export default createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const api = {
   games: {
@@ -29,5 +29,5 @@ export const api = {
     create: () => `${BASE_URL}/reviews`,
     update: (id) => `${BASE_URL}/reviews/${id}`,
     delete: (id) => `${BASE_URL}/reviews/${id}`,
-  }
-}
+  },
+};

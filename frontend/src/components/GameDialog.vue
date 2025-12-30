@@ -65,7 +65,11 @@
           :show-clear="true"
         />
         <div class="add-new">
-          <InputText v-model="newPlatform" placeholder="Новая платформа" @keyup.enter="addPlatform" />
+          <InputText
+            v-model="newPlatform"
+            placeholder="Новая платформа"
+            @keyup.enter="addPlatform"
+          />
           <Button icon="pi pi-plus" @click="addPlatform" />
         </div>
       </div>
@@ -79,25 +83,25 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import FloatLabel from 'primevue/floatlabel'
-import Button from 'primevue/button'
-import MultiSelect from 'primevue/multiselect'
-import { useToast } from 'primevue/usetoast'
-import { api } from '@/api'
+import { ref, watch, onMounted } from 'vue';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import Textarea from 'primevue/textarea';
+import FloatLabel from 'primevue/floatlabel';
+import Button from 'primevue/button';
+import MultiSelect from 'primevue/multiselect';
+import { useToast } from 'primevue/usetoast';
+import { api } from '@/api';
 
-const toast = useToast()
+const toast = useToast();
 
 const props = defineProps({
   visible: Boolean,
-  game: Object
-})
+  game: Object,
+});
 
-const emit = defineEmits(['update:visible', 'save'])
+const emit = defineEmits(['update:visible', 'save']);
 
 const localGame = ref({
   title: '',
@@ -106,83 +110,84 @@ const localGame = ref({
   developer: '',
   publisher: '',
   genres: [],
-  platforms: []
-})
+  platforms: [],
+});
 
-const allGenres = ref([])
-const allPlatforms = ref([])
-const newGenre = ref('')
-const newPlatform = ref('')
+const allGenres = ref([]);
+const allPlatforms = ref([]);
+const newGenre = ref('');
+const newPlatform = ref('');
 
-watch(() => props.game, g => {
-  if (g) {
-    localGame.value = {
-      ...g,
-      genres: [...(g.genres || [])],
-      platforms: [...(g.platforms || [])]
+watch(
+  () => props.game,
+  (g) => {
+    if (g) {
+      localGame.value = {
+        ...g,
+        genres: [...(g.genres || [])],
+        platforms: [...(g.platforms || [])],
+      };
+    } else {
+      localGame.value = {
+        title: '',
+        description: '',
+        release_year: new Date().getFullYear(),
+        developer: '',
+        publisher: '',
+        genres: [],
+        platforms: [],
+      };
     }
-  } else {
-    localGame.value = {
-      title: '',
-      description: '',
-      release_year: new Date().getFullYear(),
-      developer: '',
-      publisher: '',
-      genres: [],
-      platforms: []
-    }
-  }
-})
+  },
+);
 
 onMounted(async () => {
-  const g = await fetch(api.games.genres()).then(r => r.json())
-  const p = await fetch(api.games.platforms()).then(r => r.json())
-  allGenres.value = g
-  allPlatforms.value = p
-})
+  const g = await fetch(api.games.genres()).then((r) => r.json());
+  const p = await fetch(api.games.platforms()).then((r) => r.json());
+  allGenres.value = g;
+  allPlatforms.value = p;
+});
 
 const addGenre = () => {
-  const v = newGenre.value.trim()
-  if (!v) return
-  if (!allGenres.value.includes(v)) allGenres.value.push(v)
-  if (!localGame.value.genres.includes(v)) localGame.value.genres.push(v)
-  newGenre.value = ''
-}
+  const v = newGenre.value.trim();
+  if (!v) return;
+  if (!allGenres.value.includes(v)) allGenres.value.push(v);
+  if (!localGame.value.genres.includes(v)) localGame.value.genres.push(v);
+  newGenre.value = '';
+};
 
 const addPlatform = () => {
-  const v = newPlatform.value.trim()
-  if (!v) return
-  if (!allPlatforms.value.includes(v)) allPlatforms.value.push(v)
-  if (!localGame.value.platforms.includes(v)) localGame.value.platforms.push(v)
-  newPlatform.value = ''
-}
+  const v = newPlatform.value.trim();
+  if (!v) return;
+  if (!allPlatforms.value.includes(v)) allPlatforms.value.push(v);
+  if (!localGame.value.platforms.includes(v)) localGame.value.platforms.push(v);
+  newPlatform.value = '';
+};
 
 const saveGame = async () => {
   if (!localGame.value.title.trim()) {
-    toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Название обязательно', life: 3000 })
-    return
+    toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Название обязательно', life: 3000 });
+    return;
   }
 
-  const method = localGame.value.id ? 'PATCH' : 'POST'
-  const url = localGame.value.id
-    ? api.games.update(localGame.value.id)
-    : api.games.create()
+  const method = localGame.value.id ? 'PATCH' : 'POST';
+  const url = localGame.value.id ? api.games.update(localGame.value.id) : api.games.create();
 
   const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(localGame.value)
-  })
+    body: JSON.stringify(localGame.value),
+  });
 
   if (!res.ok) {
-    toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Ошибка сохранения', life: 4000 })
-    return
+    toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Ошибка сохранения', life: 4000 });
+    return;
   }
 
-  emit('save', await res.json())
-  emit('update:visible', false)
-  toast.add({ severity: 'success', summary: 'Готово', detail: 'Игра сохранена', life: 3000 })
-}
+  emit('save', await res.json());
+  emit('update:visible', false);
+  toast.add({ severity: 'success', summary: 'Готово', detail: 'Игра сохранена', life: 3000 });
+};
 </script>
 
 <style scoped>
