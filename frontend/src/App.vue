@@ -1,11 +1,12 @@
-<script setup></script>
-
+<!-- src/App.vue -->
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <Layout>
+    <router-view />
+  </Layout>
+  <Toast position="top-right" />
 </template>
 
-<style scoped></style>
+<script setup>
+import Layout from '@/components/layout/Layout.vue'
+import { RouterView } from 'vue-router'
+</script>
