@@ -63,7 +63,7 @@ const props = defineProps({
 const router = useRouter()
 
 const coverImage = computed(() =>
-  props.game.cover || null
+  props.game.cover_image_path || props.game.cover_image || null
 )
 
 const displayedGenres = computed(() =>
