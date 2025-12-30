@@ -20,6 +20,7 @@ pydantic = "^2.6.1"
 pydantic-settings = "^2.1.0"
 python-multipart = "^0.0.9"
 python-dotenv = "^1.0.1"
+supabase = "^2.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
@@ -52,3 +53,4 @@ filterwarnings = [
     "ignore::DeprecationWarning"
 ]
 addopts = "-q -s"
+
