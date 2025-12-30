@@ -1,0 +1,185 @@
+from typing import List
+
+from fastapi import APIRouter, HTTPException, Query, Request
+
+from app.core.database import supabase, update_game_average_rating
+from app.schemas.review import (
+    ReviewCreate,
+    ReviewListResponse,
+    ReviewUpdate,
+)
+
+router = APIRouter(prefix="/reviews", tags=["Рецензии"])
+
+
+@router.get("/me", response_model=ReviewListResponse)
+async def get_my_reviews(
+    request: Request,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+):
+    client_ip = request.client.host
+    offset = (page - 1) * page_size
+
+    response = (
+        supabase.table("reviews")
+        .select("*", count="exact")
+        .eq("ip_address", client_ip)
+        .range(offset, offset + page_size - 1)
+        .execute()
+    )
+
+    total = response.count or 0
+    pages = (total + page_size - 1) // page_size if page_size > 0 else 1
+
+    return ReviewListResponse(
+        items=response.data,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+    )
+
+
+@router.get("", response_model=ReviewListResponse)
+async def get_all_reviews(
+    page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)
+):
+    offset = (page - 1) * page_size
+
+    response = (
+        supabase.table("reviews")
+        .select("*", count="exact")
+        .range(offset, offset + page_size - 1)
+        .execute()
+    )
+
+    total = response.count or 0
+    pages = (total + page_size - 1) // page_size if page_size > 0 else 1
+
+    return ReviewListResponse(
+        items=response.data,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+    )
+
+
+@router.get("/recent", response_model=List[dict])
+async def get_recent_reviews(limit: int = Query(10, ge=1, le=50)):
+    response = (
+        supabase.table("reviews")
+        .select("*, games(*)")
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return response.data
+
+
+@router.get("/{review_id}", response_model=dict)
+async def get_review(review_id: int):
+    response = (
+        supabase.table("reviews")
+        .select("*, games(*)")
+        .eq("id", review_id)
+        .maybe_single()
+        .execute()
+    )
+    if not response:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+    return response.data
+
+
+@router.post("", response_model=dict, status_code=201)
+async def create_review(review: ReviewCreate, request: Request):
+    ip = request.client.host
+
+    game_check = supabase.table("games").select("id").eq("id", review.game_id).execute()
+    if not game_check.data:
+        raise HTTPException(404, "Игра не найдена")
+
+    duplicate = (
+        supabase.table("reviews")
+        .select("id")
+        .eq("game_id", review.game_id)
+        .eq("ip_address", ip)
+        .execute()
+    )
+    if duplicate.data:
+        raise HTTPException(409, "У вас уже есть рецензия на эту игру")
+
+    review_data = review.dict()
+    review_data["ip_address"] = ip
+    response = supabase.table("reviews").insert(review_data).execute()
+
+    await update_game_average_rating(review.game_id)
+
+    return response.data[0]
+
+
+@router.patch("/{review_id}", response_model=dict)
+async def update_review(review_id: int, update_data: ReviewUpdate, request: Request):
+    review_check = supabase.table("reviews").select("*").eq("id", review_id).execute()
+    if not review_check.data:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+    review = review_check.data[0]
+    if not review:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+
+    review_data = review
+    if review_data["ip_address"] != request.client.host:
+        raise HTTPException(403, "Нет доступа")
+
+    update_dict = update_data.dict(exclude_unset=True)
+    response = (
+        supabase.table("reviews").update(update_dict).eq("id", review_id).execute()
+    )
+
+    await update_game_average_rating(review_data["game_id"])
+
+    return response.data[0]
+
+
+@router.delete("/{review_id}", status_code=204)
+async def delete_review(review_id: int, request: Request):
+    review_check = supabase.table("reviews").select("*").eq("id", review_id).execute()
+    if not review_check.data:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+    review = review_check.data[0]
+    if not review:
+        raise HTTPException(status_code=404, detail="Рецензия не найдена")
+
+    if review["ip_address"] != request.client.host:
+        raise HTTPException(403, "Нет доступа")
+
+    supabase.table("reviews").delete().eq("id", review_id).execute()
+    await update_game_average_rating(review["game_id"])
+
+    return None
+
+
+@router.get("/game/{game_id}", response_model=dict)
+async def get_game_reviews(game_id: int, request: Request):
+    game_check = supabase.table("games").select("*").eq("id", game_id).execute()
+    if not game_check.data:
+        raise HTTPException(status_code=404, detail="Игра не найдена")
+
+    game = game_check.data[0]
+
+    reviews = supabase.table("reviews").select("*").eq("game_id", game_id).execute()
+
+    client_ip = request.client.host
+    items = []
+    for r in reviews.data:
+        r["is_own"] = r.get("ip_address") == client_ip
+        items.append(r)
+
+    return {
+        "game_id": game_id,
+        "game_title": game["title"],
+        "average_rating": game.get("average_rating") or 0,
+        "reviews_count": len(items),
+        "items": items,
+    }
