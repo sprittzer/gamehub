@@ -12,6 +12,35 @@ from app.schemas.review import (
 router = APIRouter(prefix="/reviews", tags=["Рецензии"])
 
 
+@router.get("/me", response_model=ReviewListResponse)
+async def get_my_reviews(
+    request: Request,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+):
+    client_ip = request.client.host
+    offset = (page - 1) * page_size
+
+    response = (
+        supabase.table("reviews")
+        .select("*", count="exact")
+        .eq("ip_address", client_ip)
+        .range(offset, offset + page_size - 1)
+        .execute()
+    )
+
+    total = response.count or 0
+    pages = (total + page_size - 1) // page_size if page_size > 0 else 1
+
+    return ReviewListResponse(
+        items=response.data,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+    )
+
+
 @router.get("", response_model=ReviewListResponse)
 async def get_all_reviews(
     page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)
@@ -132,21 +161,25 @@ async def delete_review(review_id: int, request: Request):
 
 
 @router.get("/game/{game_id}", response_model=dict)
-async def get_game_reviews(game_id: int):
+async def get_game_reviews(game_id: int, request: Request):
     game_check = supabase.table("games").select("*").eq("id", game_id).execute()
     if not game_check.data:
         raise HTTPException(status_code=404, detail="Игра не найдена")
 
     game = game_check.data[0]
 
-    reviews = (
-        supabase.table("reviews").select("*, games(*)").eq("game_id", game_id).execute()
-    )
+    reviews = supabase.table("reviews").select("*").eq("game_id", game_id).execute()
+
+    client_ip = request.client.host
+    items = []
+    for r in reviews.data:
+        r["is_own"] = r.get("ip_address") == client_ip
+        items.append(r)
 
     return {
         "game_id": game_id,
         "game_title": game["title"],
-        "average_rating": game["average_rating"] or 0,
-        "reviews_count": len(reviews.data),
-        "items": reviews.data,
+        "average_rating": game.get("average_rating") or 0,
+        "reviews_count": len(items),
+        "items": items,
     }

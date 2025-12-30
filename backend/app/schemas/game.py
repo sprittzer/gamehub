@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, validator
 
 
 class GameBase(BaseModel):
@@ -163,59 +163,20 @@ class GameUpdate(BaseModel):
 
 
 class GameFilter(BaseModel):
-    q: Optional[str] = Field(
-        None,
-        description="Поиск по названию игры",
-        examples=["Doom"],
-    )
-    genres: Optional[str] = Field(
-        None,
-        description="Фильтр по жанрам (shooter,action)",
-        examples=["shooter"],
-    )
-    platforms: Optional[str] = Field(
-        None,
-        description="Фильтр по платформам (pc,ps5)",
-        examples=["pc"],
-    )
-    developer: Optional[str] = Field(
-        None,
-        description="Фильтр по разработчику",
-        examples=["id Software"],
-    )
-    publisher: Optional[str] = Field(
-        None,
-        description="Фильтр по издателю",
-        examples=["Bethesda"],
-    )
-    min_rating: Optional[float] = Field(
-        None,
-        ge=0,
-        le=10,
-        description="Минимальный средний рейтинг",
-        examples=[4.0],
-    )
-    max_rating: Optional[float] = Field(
-        None,
-        ge=0,
-        le=10,
-        description="Максимальный средний рейтинг",
-        examples=[5.0],
-    )
-    min_year: Optional[int] = Field(
-        None,
-        ge=1900,
-        le=2030,
-        description="Минимальный год выпуска",
-        examples=[2020],
-    )
-    max_year: Optional[int] = Field(
-        None,
-        ge=1900,
-        le=2030,
-        description="Максимальный год выпуска",
-        examples=[2025],
-    )
+    q: Optional[str] = None
+    genres: Optional[List[str]] = None
+    platforms: Optional[List[str]] = None
+    developer: Optional[str] = None
+    min_year: Optional[int] = None
+    max_year: Optional[int] = None
+    min_rating: Optional[float] = None
+    max_rating: Optional[float] = None
+
+    @validator("genres", "platforms", pre=True)
+    def split_comma(cls, v):
+        if isinstance(v, str):
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
 
 
 class GameResponse(GameBase):

@@ -1,7 +1,7 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from postgrest.exceptions import APIError
 
 from app.core.database import (
@@ -51,9 +51,35 @@ async def get_all_platforms_handler():
 async def list_games(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
-    filter: GameFilter = Depends(),
+    q: Optional[str] = None,
+    genres: Optional[str] = None,
+    platforms: Optional[str] = None,
+    developer: Optional[str] = None,
+    min_year: Optional[int] = None,
+    max_year: Optional[int] = None,
+    min_rating: Optional[float] = None,
+    max_rating: Optional[float] = None,
 ):
-    games, total = await get_games(page, page_size, filter)
+    genres_list = (
+        [x.strip() for x in genres.split(",") if x.strip()] if genres else None
+    )
+    platforms_list = (
+        [x.strip() for x in platforms.split(",") if x.strip()] if platforms else None
+    )
+
+    filter_obj = GameFilter(
+        q=q,
+        genres=genres_list,
+        platforms=platforms_list,
+        developer=developer,
+        min_year=min_year,
+        max_year=max_year,
+        min_rating=min_rating,
+        max_rating=max_rating,
+    )
+
+    games, total = await get_games(page, page_size, filter_obj)
+
     return GameListResponse(
         items=games,
         total=total,
