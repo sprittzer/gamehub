@@ -2,7 +2,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api
 
 export const api = {
   games: {
-    list: (page = 1, pageSize = 20) => `${API_BASE}/games?page=${page}&page_size=${pageSize}`,
+    list: () => `${API_BASE}/games`,
 
     top: (limit = 10) => `${API_BASE}/games/top?limit=${limit}`,
     recent: (limit = 10) => `${API_BASE}/games/recent?limit=${limit}`,
